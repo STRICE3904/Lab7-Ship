@@ -1,3 +1,25 @@
+/*Samuel Trice
+* C++ 2021 Fall
+* Lab 7
+* Make the game battleship. For placing the user’s ships, the user should be able 
+to choose a xy coordinate and a direction to place the ship. Again, the program 
+should check to make sure the ship placement is valid. The grid and coordinate system 
+should be setup with x in the horizontal direction and y in the vertical direction. 
+For each turn of the game, the computer should randomly choose locations to fire and 
+the results should be shared and tracked on the screen. An example output on the 
+computer’s turn would show the computer firing and giving the coordinates, display the 
+result of “HIT!” and display an updated grid with ships and the locations of all of the 
+computer’s hits and misses. When displaying the grid, you must have the grid coordinates 
+displayed on the boarder for reference. You should give the user the option during each turn 
+to fire, view user’s ship grid, or  surrender. When the fire function is called, display 
+the user’s guess grid for reference. The program must ensure the computer and user only 
+fire at valid locations that have not been checked. When one of the fleets is destroyed, 
+the program should recognized it, communicate the results to the users, given an update 
+on wins and losses, and give them the option to play again or quit. Make sure to use good 
+programing practices for this lab. I expect that you use functions for each action the program 
+takes, your code is well documented with pre/post conditions, and your code is reasonably efficient
+*/
+
 #include "Player.h"
 #include <iostream>
 #include <time.h>
@@ -9,117 +31,176 @@ using namespace std;
 //Specified in Player.h and implemented in Player.cpp
 Player user, computer;
 
-enum orientation { UP, DOWN, LEFT, RIGHT };
+enum compas { North, South, East, West };
 
-enum shiptype { DESTROYER, SUBMARINE, CRUSIER, BATTLESHIP, CARRIER };
+enum ship_type { Destroyer, Submarine, Cruiser, Battleship, Carrier };
 
+/*Precondition: 
+	Game must be set upand boards must be gennerated.
+	Computer statistics must be initialized
+Postcondition: 
+	Prints the computers attempted hit or miss to the output screen.
+	Adds the result to computer statistics. 
+*/
 void computer_turn(int& computerHits, int& computerMisses);
-//Pre: Gameboards for computer and user must be generated; Counters for computer hits and misses must be initialized and passed by reference as well.
-//Post: A message is printed to the screen stating if the computer landed a hit or not and increments hit and miss counters.
 
+/*Precondition:
+	Game must be set upand boards must be gennerated.
+	Player statistics must be initialized
+Postcondition:
+	Player compleates their turn 
+*/
 void user_turn(int& userHits, int& userMisses);
-//Pre: Gameboards for computer and user must be generated; Counters for user hits and misses must be initialized and passed by reference.
-//Post: The user has completed their turn.
 
+/*Precondition:
+	Computer turn is complete
+	Player turn is complete
+Postcondition:
+	Checks win conditions to see if the game is over
+*/
 void check_win(int computerHits, int computerMisses, int userHits, int userMisses, bool hasSurrendered, bool& isEndOfGame, int& numOfLosses, int& numOfWins);
-//Pre: Both the computer and user have completed their turns
-//Post: Function determines whether or not the game is compeleted.
 
+/*Precondition:
+	Reference to computers grid is available
+	Two counters initialized
+Postcondition:
+	Usser is given options once their turn is over
+*/
 void Menu(bool& hasSurrendered, int& userHits, int& userMisses);
-//Pre: Function is able to reference the computer's ship grid; Function is passed two intitialized counter arguements and an initialized bool arguement.
-//Post: User has completed all allowable actions for their turn.
 
+/*Precondition:
+	At least one game has finished
+Postcondition:
+	A new game is started or the program closes
+*/
 bool new_game();
-//Pre: A single game has been completed
-//Post: Function returns whether or not a new game will be started
 
+/*Precondition:
+	Player chose to surrender.
+	Player confirmed to surrender
+Postcondition:
+	Player surrenders
+*/
 void Surrender(bool& hasSurrendered);
-//Pre: User has selected "surrender" from the user turn menu and a bool argument determining if the player has surrendered is initialized and passed by reference.
-//Post: The user's choice to surrender has been validated.
 
+/*Precondition:
+	Computers and Players grids can be referenced
+	Fuction checks where can be targeted
+Postcondition:
+	Functions determins a hit or miss and updates the grid
+*/
 bool Fire(char shipGrid[][10], char guessGrid[][10], int xcoordinate, int ycoordinate);
-//Pre: The function has the ability to reference both sets of the computer's and user's grids; Function is passed array indexes of location to fire on
-//Post: Function determines if a ship has been hit and updates guess grids with either 'H' or 'M'
 
-void GenerateComputerShipGrid();
-//Pre: Program has access to the computer's ship grid
-//Post: The computer's ship grid is randomly populated with ships with differing orientations
+/*Precondition:
+	Computers grids can be updated
+Postcondition:
+	Ships are added randomly to the grid
+*/
+void computer_ship_grid();
 
+/*Precondition:
+	Program usses an empty array
+Postcondition:
+	The array is initialized in a 10x10 and populated with "water"(~)
+*/
 void board_default(char emptyArray[][10]);
-//Pre: Program has access to the an empty array of a declared size
-//Post: The array is initailized to contain 10 x 10 grid of water ('~')
 
-void UserShipPlacement();
-//Pre: Function is able to access the user's inititialized blank ship array
-//Post: The user has placed their ships on their ship grid
+/*Precondition:
+	Player's grid can be updated
+Postcondition:
+	The player chooses where they want their ships to be placed
+*/
+void player_ship_adder();
 
-void ValidateUserInput(int& shipLength);
-//Pre: The user's ship and guess arrays have been successfully initialized
-//Post: The user's input has been validated and ships have been placed on the user's ship grid.
+/*Precondition:
+	The player's ship and guess arrays have been successfully initialized
+Postcondition:
+	The players's input has been validated and ships have been placed on the user's ship grid.
+*/
+void check_input(int& shipLength);
 
-bool IsValidOrientation(int row, int column, string shipOrientation, int shipLength);
-//Pre: User input has been validated to be of the correct data type and the user's ship array has been declared and initialized.
-//Post: The user's ship orientation has been verified to be with in array bounds and not overlap other ships
+/*Precondition:
+	Player's input has been checked
+	Player's grid has been declaired and initialized
+Postcondition:
+	Player's ship directions have been checked and verified
+*/
+bool validate_direction(int row, int column, string ship_direction, int shipLength);
 
-void PrintBoard(char array[][10]);
-//Pre: Array to be printed has been declared and initialized
-//Post: The array is output to the screen
+/*Precondition:
+	The grid has already been declaired and initialized
+Postcondition:
+	The grid is outputed
+*/
+void output_board(char array[][10]);
 
-void AddShipVertical(int shipLength);
-//Pre: Computer ship array has been declared and initialized
-//Post: A ship is added vertically to the computer's ship array
+/*Precondition:
+	Computer's grid has already been declaired and initialized
+Postcondition:
+	A ship is added North or South on the computer's grid
+*/
+void add_north_south(int shipLength);
 
-void AddShipHorizontal(int shipLength);
-//Pre: Computer ship array has been decared and initialized
-//Post: A ship is added horizontally to the computer's ship array
+/*Precondition:
+	Computer's grid has already been declaired and initialized
+Postcondition:
+	A ship is added East or West on the computer's grid
+*/
+void add_east_west(int shipLength);
 
-bool IsComputerShipOverlap(int ranRowsorColumns, int shipLength, orientation shipDirection);
-//Pre: Computer ship array has been declared and initialized
-//Post: Computer has verified if there is ship overlap on the computer's ship array
+/*Precondition:
+	Computer's grid has already been declaired and initialized
+Postcondition:
+	Function has verified if there is ship overlap on the computers's ship array
+*/
+bool coputer_overlap_check(int ranRowsorColumns, int shipLength, compas shipDirection);
 
-bool IsUserShipOverlap(int row, int column, int shipLength, orientation shipDirection);
-//Pre: User ship array has been declared and inititalized; function is passed user input for array coordinates
-//Post: Computer has verified if there is ship overlap on the user's ship array
+/*Precondition:
+	Players's grid has already been declaired and initialized
+	Function is passed player input for location
+Postcondition:
+	Function has verified if there is ship overlap on the players's ship array
+*/
+bool player_overlap_check(int row, int column, int shipLength, compas shipDirection);
 
-bool IsOutOfBounds(int row, int column, int shipLength, orientation shipDirection);
-//Pre: User ship array has been declared and initialized; Function is passed user's array coordinates and ship orientation
-//Post: Computer has verified that the user's array coordinates in conjunction with the orientation of the ship are within the array bounds.
+/*Precondition:
+	Player ship array has been declaired and initialized
+	Function is passed player ship location data
+Postcondition:
+	Function has verified if there is ship out of bounds on the Player's ship array
+*/
+bool ship_outofbounds_check(int row, int column, int shipLength, compas shipDirection);
 
-void PlaceUserShip(int row, int column, int shipLength, string shipOrientation);
-//Pre: User ship array has been declared and initalized; Computer has verified that ship placement will be within array bounds and not overlap other ships
-//Post: The user's ships are placed on the board at the given coordinates and orientation
+/*Precondition:
+	Players's grid has already been declaired and initialized
+	Function has checked overlap and out of bounds
+Postcondition:
+	The players ships have been placed 
+*/
+void place_player_ship(int row, int column, int shipLength, string ship_direction);
 
-void OutOfBoundsMessage();
-//Pre: User has entered ship coordinates that are outside of the array bounds either by coordinates themselves or with valid coordinates with a orientation that overruns the array bounds
-//Post: A message explaining the user's error is printed to the screen.
+/*Precondition:
+	Player entered valid coordinates and direction
+Postcondition:
+	A message tells the player that their ship is placed
+*/
+void board_update_messege();
 
-void InvalidInputMessage();
-//Pre: User has entered an invalid data type during a prompt.
-//Post: A message explaining the user's error is printed to the screen.
+/*Precondition:
+	Player chose to not play again
+Postcondition:
+	A scoreboard with all the statistics is outputed to the screen
+*/
+void output_statistics(int numOfGames, int numOfLosses, int numOfWins);
 
-void OverlapMessage();
-//Pre: User has entered ship coordinates and orientation that overlaps with another ship on their board
-//Post: A message explaining the user's error is printed to the screen.
-
-void UpdatedBoardMessage();
-//Pre: User has entered valid coordinates and orientation for their ship.
-//Post: A message telling the user their ship was placed is printed to the screen
-
-void PrintScoreBoard(int numOfGames, int numOfLosses, int numOfWins);
-//Pre: The user has chosen to not start a new game and therefore end program execution
-//Post: A scoreboard of wins, losses, and user statistics are printed to the screen before program exit.
 
 int main()
 {
 	//Seeds clock for random number generation.
 	srand(unsigned int(time(NULL)));
 
-	//Boolean data types for loop control in main()
-	bool isNewGame;
-	bool isEndOfGame;
-	bool hasSurrendered;
 
-	//These identifiers track game progress.
+	//These identifiers track game progress amd control loops
 	int numOfGames = 1;
 	int numOfWins = 0;
 	int numOfLosses = 0;
@@ -127,37 +208,29 @@ int main()
 	int userMisses;
 	int computerHits;
 	int computerMisses;
+	bool isNewGame;
+	bool isEndOfGame;
+	bool hasSurrendered;
+
 
 	//Begin game loop.
 	do
 	{
 		system("cls");
 
-		//Tracks how many hits have been made (17 in total for each gameboard)
+		//Tracks how many hits have been made
 		computerHits = 0;
 		computerMisses = 0;
 		userHits = 0;
 		userMisses = 0;
 
-		//Initializes and populates computer's board
-			//Sets empty 10 x 10 array to water ('~') for computer guess grid
+		//Sets boards and ships
 		board_default(computer.guessArray);
-
-		//Sets empty 10 x 10 array to water ('~')
 		board_default(computer.shipArray);
-
-		//Randomly select 5 places on the water grid to place a ship
-		GenerateComputerShipGrid();
-
-		//Initializes and allows user to place their ships
-			//Initialize user's guess grid to water ('~')
+		computer_ship_grid();
 		board_default(user.guessArray);
-
-		//Initialize user's ship grid to water ('~')
 		board_default(user.shipArray);
-
-		//Allows user to place ships and validates ship positions at the same time
-		UserShipPlacement();
+		player_ship_adder();
 
 		isEndOfGame = false;
 		hasSurrendered = false;
@@ -165,24 +238,17 @@ int main()
 		//Interactive portion of the game.
 		do
 		{
-			//Computer fires and updates guess grid.
-			computer_turn(computerHits, computerMisses);
-
-			//User fires and updates guess grid.
-			Menu(hasSurrendered, userHits, userMisses);
+			computer_turn(computerHits, computerMisses);//Computer fires and updates guess grid.
+			Menu(hasSurrendered, userHits, userMisses);//User fires and updates guess grid.
 
 			//Game end conditions are checked to verify if it is the end of the game.
 			check_win(computerHits, computerMisses, userHits, userMisses, hasSurrendered, isEndOfGame, numOfLosses, numOfWins);
 
 		} while (!isEndOfGame);
-
-		//User is prompted for a new game in new_game().
-		//If yes - new set up from top of loop.
-		//If no - Scoreboard is printed and program terminates.
 	} while (new_game());
 
 	//End of game loop.
-	PrintScoreBoard(numOfGames, numOfLosses, numOfWins);
+	output_statistics(numOfGames, numOfLosses, numOfWins);
 
 	cout << "\n\nGoodbye...\n";
 
@@ -191,16 +257,17 @@ int main()
 
 void computer_turn(int& computerHits, int& computerMisses)
 {
-	//Ran num range must be 1 - 10 because the Fire() function subtracts one for user input.
-	//In other words 1 is subtracted because these values are passed for array processing where valid array indexes are 1 - 9.
+	//Random x,y coordinate is choses
 	int com_x = rand() % 10 + 1;
 	int com_y = rand() % 10 + 1;
 
-	if (Fire(user.shipArray, computer.guessArray, com_x, com_y) == true) { //If there is a '#' at the random coordinates that computer has generated.
+	if (Fire(user.shipArray, computer.guessArray, com_x, com_y) == true) 
+	{ 
 		cout << "\nThe computer landed a hit!\n\n";
 		computerHits++;
 	}
-	else {
+	else
+	{
 		cout << "\nThe computer missed!\n";
 		computerMisses++;
 	}
@@ -212,44 +279,41 @@ void user_turn(int& userHits, int& userMisses)
 	//Handle is used to communicate with the windows console which the game is running in
 	HANDLE hConsole;
 	hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-
-	//Identifiers for user's input coordinates
-	int xcoordinate;
+	int xcoordinate;//Identifiers for user's input coordinates
 	int ycoordinate;
-
-	cout << "\n\nEnter the x-coordinate you want to fire on: ";
+	cout << "\n\nEnter target x coordinate: ";
 	cin >> xcoordinate;
 
-	//While user has entered invalid data or out-of-range values
-	while (!cin || xcoordinate < 1 || xcoordinate > 10)
+	while (!cin || xcoordinate < 1 || xcoordinate > 10)//While user has entered invalid data or out-of-range values
 	{
 		cin.clear();
 		cin.ignore(1000, '\n');
-
-		InvalidInputMessage();
+		cout << endl << "Invalid input. Your input should be an integer between or equal to 1 and 10\a\n";
+		cout << endl << "Try again: ";
 		cin >> xcoordinate;
 	}
 
-	cout << "\n\nEnter the y-coordinate you want to fire on: ";
+	cout << "\n\nEnter target y coordinate: ";
 	cin >> ycoordinate;
 
-	//While user has entered invalid data or out-of-range values
-	while (!cin || ycoordinate < 1 || ycoordinate > 10)
+	while (!cin || ycoordinate < 1 || ycoordinate > 10)//While user has entered invalid data or out-of-range values
 	{
 		cin.clear();
 		cin.ignore(1000, '\n');
-
-		InvalidInputMessage();
+		cout << endl << "Invalid input. Your input should be an integer between or equal to 1 and 10\a\n";
+		cout << endl << "Try again: ";
 		cin >> ycoordinate;
 	}
 
-	if (Fire(computer.shipArray, user.guessArray, xcoordinate, ycoordinate) == true) {
+	if (Fire(computer.shipArray, user.guessArray, xcoordinate, ycoordinate) == true)
+	{
 		cout << "\n\nYou landed a ";
 		SetConsoleTextAttribute(hConsole, 12); //Sets console color to red
 		cout << "hit!\n";
 		userHits++;
 	}
-	else {
+	else 
+	{
 		cout << "\n\nYou";
 		SetConsoleTextAttribute(hConsole, 10); //Sets console color to green
 		cout << " missed!\n";
@@ -261,15 +325,11 @@ void user_turn(int& userHits, int& userMisses)
 
 void Menu(bool& hasSurrendered, int& userHits, int& userMisses)
 {
-	//Stores user input for following menu
-	int selection;
-	//Bool controls whether or not the user has completed their turn
-	bool isEndOfTurn;
+	int selection;//Stores user input for following menu
+	bool isEndOfTurn;//Bool controls whether or not the user has completed their turn
 
-	cout << "Here is your guess grid: \n";
-
-	PrintBoard(user.guessArray);
-
+	cout << "Your guess grid: \n";
+	output_board(user.guessArray);
 	cout << "\nEnter your selection from the following menu: \n";
 
 	do
@@ -287,7 +347,7 @@ void Menu(bool& hasSurrendered, int& userHits, int& userMisses)
 		{
 		case 1:
 			system("cls");
-			PrintBoard(user.guessArray);
+			output_board(user.guessArray);
 			user_turn(userHits, userMisses);
 			isEndOfTurn = true;
 			break;
@@ -295,16 +355,16 @@ void Menu(bool& hasSurrendered, int& userHits, int& userMisses)
 		case 2:
 			system("cls");
 			cout << endl;
-			cout << "These are the computer's guesses so far: \n";
-			PrintBoard(computer.guessArray);
+			cout << "Computer's guesses: \n";
+			output_board(computer.guessArray);
 			cout << endl;
 			break;
 
 		case 3:
 			system("cls");
 			cout << endl;
-			cout << "Here is your ship grid: \n";
-			PrintBoard(user.shipArray);
+			cout << "Your ship grid: \n";
+			output_board(user.shipArray);
 			cout << endl;
 			break;
 
@@ -320,19 +380,17 @@ void Menu(bool& hasSurrendered, int& userHits, int& userMisses)
 				cin.ignore(1000, '\n');
 			}
 
-			cout << "\n\nUnknown selection - your input should be an integer from the menu above.\n";
+			cout << "\n\nUnknown selection.\n";
 			cout << "Try again.\n\n";
 		}
 	} while (!isEndOfTurn);
-
 }
 
 bool new_game()
 {
 	//I chose a string for input type because any additional characters would not overrun cin
 	string input;
-
-	cout << "\n\nWould you like to start a new game?\n";
+	cout << "\n\nStart a new game?\n";
 	cout << "Y/N: ";
 	cin >> input;
 
@@ -353,33 +411,31 @@ bool new_game()
 		return true;
 }
 
-void PrintScoreBoard(int numOfGames, int numOfLosses, int numOfWins)
+void output_statistics(int numOfGames, int numOfLosses, int numOfWins)
 {
 	system("cls");
-	cout << "Here are your final stats for the program duration: \n";
+	cout << "Here are your final stats: \n";
 	cout << "\nTotal games played: " << numOfGames << endl;
 	cout << "Wins: " << numOfWins << endl;
 	cout << "Losses: " << numOfLosses << endl;
 	cout << endl;
-	cout << "Computer stats: \n";
-	cout << "Cumulative number of hits: " << computer.GetHits() << endl;
-	cout << "Cumulative number of misses: " << computer.GetMisses() << endl;
+	cout << endl;
+	cout << "Computer hits: " << computer.GetHits() << endl;
+	cout << "Computer misses: " << computer.GetMisses() << endl;
 	cout << setprecision(2) << "Accuracy: " << computer.PrintAccuracy() << '%' << endl;
 	cout << endl;
-	cout << "User stats: \n";
-	cout << "Cumulative number of hits: " << user.GetHits() << endl;
-	cout << "Cumulative number of misses: " << user.GetMisses() << endl;
+	cout << "Your stats: \n";
+	cout << "Player hits: " << user.GetHits() << endl;
+	cout << "Player misses: " << user.GetMisses() << endl;
 	cout << setprecision(2) << "Accuracy: " << user.PrintAccuracy() << '%' << endl;
 }
 
 void Surrender(bool& hasSurrendered)
 {
 	string input;
-
 	cout << "\n\nAre you sure you want to surrender?\n";
 	cout << "Y/N: ";
 	cin >> input;
-
 	if (toupper(input[0]) == 'Y')
 		hasSurrendered = true;
 
@@ -391,11 +447,9 @@ void check_win(int computerHits, int computerMisses, int userHits, int userMisse
 	if (computerHits == 17 || hasSurrendered == true) {
 
 		isEndOfGame = true;
-
 		system("cls");
-
 		cout << "\n\nYou lose!\n";
-		cout << "Here is the computer's ship board: \n";
+		cout << "Computer's ship board: \n";
 		numOfLosses++;
 
 		//Update values in player objects
@@ -403,17 +457,14 @@ void check_win(int computerHits, int computerMisses, int userHits, int userMisse
 		computer.SetNumOfMisses(computerMisses);
 		user.SetNumOfHits(userHits);
 		user.SetNumOfMisses(userMisses);
-
-		PrintBoard(computer.shipArray);
+		output_board(computer.shipArray);
 	}
 	else if (userHits == 17) { //If user sinks all the computer's ships
 
 		isEndOfGame = true;
-
 		system("cls");
-
 		cout << "\n\nYou win!\n";
-		cout << "Here is the computer's ship board: \n";
+		cout << "Computer's ship board: \n";
 		numOfWins++;
 
 		//Update values in player objects
@@ -423,7 +474,7 @@ void check_win(int computerHits, int computerMisses, int userHits, int userMisse
 		user.SetNumOfMisses(userMisses);
 
 
-		PrintBoard(computer.shipArray);
+		output_board(computer.shipArray);
 	}
 }
 
@@ -442,7 +493,7 @@ bool Fire(char shipGrid[][10], char guessGrid[][10], int xcoordinate, int ycoord
 	}
 }
 
-void UserShipPlacement()
+void player_ship_adder()
 {
 	//hConsole is of type HANDLE, which allows access to manipulate the windows console for coloring and formatting output
 	HANDLE hConsole;
@@ -454,73 +505,73 @@ void UserShipPlacement()
 	cout << "The computer has finished its set-up\n";
 	cout << "You need to do the same with the following board: \n";
 
-	PrintBoard(user.shipArray);
+	output_board(user.shipArray);
 
 	int shipLength;
 	//Following for-loop and switch guide player through gameboard set up.
-	for (shiptype ship = DESTROYER; ship <= CARRIER; ship = shiptype(ship + 1))
+	for (ship_type ship = Destroyer; ship <= Carrier; ship = ship_type(ship + 1))
 	{
 		switch (ship)
 		{
-		case DESTROYER:
+		case Destroyer:
 			shipLength = 2;
 
 			cout << "\n\nPlace your destroyer (2 places)";
 
-			ValidateUserInput(shipLength);
+			check_input(shipLength);
 
 			//Clears board on the console screen after the user has placed a ship.
 			system("cls");
 
-			UpdatedBoardMessage();
-			PrintBoard(user.shipArray);
+			board_update_messege();
+			output_board(user.shipArray);
 			break;
 
-		case SUBMARINE:
+		case Submarine:
 			shipLength = 3;
 
 			cout << "\n\nPlace your submarine (3 places)";
 
-			ValidateUserInput(shipLength);
+			check_input(shipLength);
 
 			system("cls");
 
-			UpdatedBoardMessage();
-			PrintBoard(user.shipArray);
+			board_update_messege();
+			output_board(user.shipArray);
 			break;
 
-		case CRUSIER:
+		case Cruiser:
 			shipLength = 3;
 
 			cout << "\n\nPlace your crusier (3 places)";
 
-			ValidateUserInput(shipLength);
+			check_input(shipLength);
 
 			system("cls");
 
-			UpdatedBoardMessage();
-			PrintBoard(user.shipArray);
+			board_update_messege();
+			output_board(user.shipArray);
 			break;
 
-		case BATTLESHIP:
+		case Battleship:
 			shipLength = 4;
 
 			cout << "\n\nPlace your battleship (4 places)";
 
-			ValidateUserInput(shipLength);
+			check_input(shipLength);
 
 			system("cls");
 
-			UpdatedBoardMessage();
-			PrintBoard(user.shipArray);
+			board_update_messege();
+			output_board(user.shipArray);
 			break;
 
-		case CARRIER:
+		case Carrier:
 			shipLength = 5;
 
 			cout << "\n\nPlace your carrier (5 places)";
 
-			ValidateUserInput(shipLength);
+			check_input(shipLength);
 
 			system("cls");
 
@@ -529,6 +580,12 @@ void UserShipPlacement()
 	}
 
 
+}
+
+
+void board_update_messege()
+{
+	cout << endl << "This is now your board: \n" << endl;
 }
 
 //Array must be a parameter of this function because it is shared by both the user and the computer's gameboards
@@ -545,7 +602,7 @@ void board_default(char emptyArray[][10])
 }
 
 //Array must be a parameter because both the user's and computer's board share this function
-void PrintBoard(char array[][10])
+void output_board(char array[][10])
 {
 	HANDLE hConsole;
 	hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -603,69 +660,69 @@ void PrintBoard(char array[][10])
 	SetConsoleTextAttribute(hConsole, 15);
 }
 
-void GenerateComputerShipGrid()
+void computer_ship_grid()
 {
-	//shiptype enum is used to iterate through each ship size - using enums for cases made the switch statement's operation clearer
-	for (shiptype ship = DESTROYER; ship <= CARRIER; ship = shiptype(ship + 1))
+	//ship_type enum is used to iterate through each ship size - using enums for cases made the switch statement's operation clearer
+	for (ship_type ship = Destroyer; ship <= Carrier; ship = ship_type(ship + 1))
 	{
 		//Generate a 1 or 2 randomly to determine to orient verically or horizontally.
-		int ranShipOrientation = rand() % 2 + 1;
+		int random_dicrection = rand() % 2 + 1;
 		int shipLength;
 
 		switch (ship)
 		{
-		case DESTROYER:
+		case Destroyer:
 
 			shipLength = 2;
 
-			if (ranShipOrientation == 1)
-				AddShipVertical(shipLength);
+			if (random_dicrection == 1)
+				add_north_south(shipLength);
 			else
-				AddShipHorizontal(shipLength);
+				add_east_west(shipLength);
 
 			break;
 
-		case SUBMARINE:
+		case Submarine:
 
 			shipLength = 3;
 
-			if (ranShipOrientation == 1)
-				AddShipVertical(shipLength);
+			if (random_dicrection == 1)
+				add_north_south(shipLength);
 			else
-				AddShipHorizontal(shipLength);
+				add_east_west(shipLength);
 
 			break;
 
-		case CRUSIER:
+		case Cruiser:
 
 			shipLength = 3;
 
-			if (ranShipOrientation == 1)
-				AddShipVertical(shipLength);
+			if (random_dicrection == 1)
+				add_north_south(shipLength);
 			else
-				AddShipHorizontal(shipLength);
+				add_east_west(shipLength);
 
 			break;
 
-		case BATTLESHIP:
+		case Battleship:
 
 			shipLength = 4;
 
-			if (ranShipOrientation == 1)
-				AddShipVertical(shipLength);
+			if (random_dicrection == 1)
+				add_north_south(shipLength);
 			else
-				AddShipHorizontal(shipLength);
+				add_east_west(shipLength);
 
 			break;
 
-		case CARRIER:
+		case Carrier:
 
 			shipLength = 5;
 
-			if (ranShipOrientation == 1)
-				AddShipVertical(shipLength);
+			if (random_dicrection == 1)
+				add_north_south(shipLength);
 			else
-				AddShipHorizontal(shipLength);
+				add_east_west(shipLength);
 
 			break;
 		}
@@ -674,7 +731,7 @@ void GenerateComputerShipGrid()
 
 }
 
-void AddShipVertical(int shipLength)
+void add_north_south(int shipLength)
 {
 	//This bool determines if the function body should be repeated with a new random number because the first random number caused overlap
 	bool isShipOverlap;
@@ -683,7 +740,7 @@ void AddShipVertical(int shipLength)
 		//Generate a random column index
 		int ranColumn = rand() % 10;
 
-		isShipOverlap = IsComputerShipOverlap(ranColumn, shipLength, UP);
+		isShipOverlap = coputer_overlap_check(ranColumn, shipLength, North);
 
 		if (isShipOverlap == false) //If no ship is found in the validation read
 		{
@@ -696,7 +753,7 @@ void AddShipVertical(int shipLength)
 	} while (isShipOverlap);
 }
 
-void AddShipHorizontal(int shipLength)
+void add_east_west(int shipLength)
 {
 	//This bool determines if the function body should be repeated with a new random number because the first random number caused overlap
 	bool isShipOverlap;
@@ -705,8 +762,8 @@ void AddShipHorizontal(int shipLength)
 		//Generate a random row index
 		int ranRow = rand() % 10;
 
-		//IsComputerShipOverlap() will return a bool value that determines if there is ship overlap or not
-		isShipOverlap = IsComputerShipOverlap(ranRow, shipLength, LEFT);
+		//coputer_overlap_check() will return a bool value that determines if there is ship overlap or not
+		isShipOverlap = coputer_overlap_check(ranRow, shipLength, East);
 
 		//If there wasn't ship overlap
 		if (isShipOverlap == false)
@@ -721,9 +778,9 @@ void AddShipHorizontal(int shipLength)
 
 }
 
-bool IsComputerShipOverlap(int ranRowsorColumns, int shipLength, orientation shipDirection)
+bool coputer_overlap_check(int ranRowsorColumns, int shipLength, compas shipDirection)
 {
-	if (shipDirection == UP) //Verifying if a column for a ship
+	if (shipDirection == North) //Verifying if a column for a ship
 	{
 		//Does initial read of area where a ship will be added to check if a ship is already there.
 		for (shipLength; shipLength > 0; --shipLength)
@@ -737,7 +794,7 @@ bool IsComputerShipOverlap(int ranRowsorColumns, int shipLength, orientation shi
 
 		return false;
 	}
-	else if (shipDirection == LEFT) //verifying if a row for a ship
+	else if (shipDirection == East) //verifying if a row for a ship
 	{
 		for (shipLength; shipLength > 0; --shipLength)
 		{
@@ -751,7 +808,7 @@ bool IsComputerShipOverlap(int ranRowsorColumns, int shipLength, orientation shi
 	}
 }
 
-void ValidateUserInput(int& shipLength)
+void check_input(int& shipLength)
 {
 	//This bool is a loop control that is set to true if the user has overlapping ships or out-of-bounds ships
 	bool isValidInput;
@@ -759,7 +816,7 @@ void ValidateUserInput(int& shipLength)
 	//Identifiers for user input
 	int row;
 	int column;
-	string shipOrientation;
+	string ship_direction;
 
 	do
 	{
@@ -774,7 +831,8 @@ void ValidateUserInput(int& shipLength)
 			cin.clear();
 			cin.ignore(1000, '\n');
 
-			InvalidInputMessage();
+			cout << endl << "Invalid input. Your input should be an integer between or equal to 1 and 10\a\n";
+			cout << endl << "Try again: ";
 			cin >> column;
 		}
 
@@ -787,19 +845,20 @@ void ValidateUserInput(int& shipLength)
 			cin.clear();
 			cin.ignore(1000, '\n');
 
-			InvalidInputMessage();
+			cout << endl << "Invalid input. Your input should be an integer between or equal to 1 and 10\a\n";
+			cout << endl << "Try again: ";
 			cin >> row;
 		}
 
-		cout << "\nEnter the orientation you want your ship to have (\"up\", \"down\", \"left\", or \"right\"): ";
-		cin >> shipOrientation;
+		cout << "\nEnter the compas you want your ship to have (\"north\", \"south\", \"east\", or \"west\"): ";
+		cin >> ship_direction;
 
-		//While the first letter of shipOrientation string is NOT equal to U, D, R, or L
-		while (toupper(shipOrientation[0]) != 'U' && toupper(shipOrientation[0]) != 'D' && toupper(shipOrientation[0]) != 'L' && toupper(shipOrientation[0]) != 'R')
+		//While the first letter of ship_direction string is NOT equal to U, D, R, or L
+		while (toupper(ship_direction[0]) != 'N' && toupper(ship_direction[0]) != 'S' && toupper(ship_direction[0]) != 'E' && toupper(ship_direction[0]) != 'W')
 		{
-			cout << "\n\nInvalid input - input should be one of the following (\"up\", \"down\", \"left\", or \"right\")\a\n";
+			cout << "\n\nInvalid input - input should be one of the following (\"north\", \"south\", \"east\", or \west\")\a\n";
 			cout << "Try again: ";
-			cin >> shipOrientation;
+			cin >> ship_direction;
 		}
 
 		//These are decremented by one from the values the user entered (1 - 10). This way they function as indexes for the gameboard array which has valid indexes of 0 - 9 for the coming function calls.
@@ -807,70 +866,74 @@ void ValidateUserInput(int& shipLength)
 		column--;
 
 		//Checks for out of array bounds or ship overlap
-		isValidInput = IsValidOrientation(row, column, shipOrientation, shipLength);
+		isValidInput = validate_direction(row, column, ship_direction, shipLength);
 
 		//If input array indexes are not invalid
 		if (isValidInput == true)
-			PlaceUserShip(row, column, shipLength, shipOrientation);
+			place_player_ship(row, column, shipLength, ship_direction);
 
 	} while (!isValidInput); //If overlap or out-of-array bounds then this function loops until the user enters valid data
 }
 
-bool IsValidOrientation(int row, int column, string shipOrientation, int shipLength)
+bool validate_direction(int row, int column, string ship_direction, int shipLength)
 {
-	//Switches off of the capitalized first letter of string shipOrientation that the user provides
-	switch (toupper(shipOrientation[0]))
+	//Switches off of the capitalized first letter of string ship_direction that the user provides
+	switch (toupper(ship_direction[0]))
 	{
-	case 'U':
+	case 'N':
 
-		//If the user's input is out of array bounds or overlaps with another ship on the board with an updward orientation
-		if (IsOutOfBounds(row, column, shipLength, UP) == true || IsUserShipOverlap(row, column, shipLength, UP) == true)
+		//If the user's input is out of array bounds or overlaps with another ship on the board with an updward compas
+		if (ship_outofbounds_check(row, column, shipLength, North) == true || player_overlap_check(row, column, shipLength, North) == true)
 		{
 			//Print error message and board 
-			OutOfBoundsMessage();
-			PrintBoard(user.shipArray);
+			cout << endl << "\nYour Ship is outside the game board or overlapping with another ship and must be moved.\a\n";
+			cout << "Re-enter a new set of coordinates to try again.\n" << endl;
+			output_board(user.shipArray);
 
 			return false;
 		}
 
 		return true;
 
-	case 'D':
+	case 'S':
 
-		//If the user's input is out of array bounds or overlaps with another ship on the board with a downward orientation
-		if (IsOutOfBounds(row, column, shipLength, DOWN) == true || IsUserShipOverlap(row, column, shipLength, DOWN) == true)
+		//If the user's input is out of array bounds or overlaps with another ship on the board with a downward compas
+		if (ship_outofbounds_check(row, column, shipLength, South) == true || player_overlap_check(row, column, shipLength, South) == true)
 		{
 			//Print error message and board 
-			OutOfBoundsMessage();
-			PrintBoard(user.shipArray);
+			cout << endl << "\nYour Ship is outside the game board or overlapping with another ship and must be moved.\a\n";
+			cout << "Re-enter a new set of coordinates to try again.\n" << endl;
+			output_board(user.shipArray);
 
 			return false;
 		}
 
 		return true;
 
-	case 'L':
+	case 'East':
 
-		//If the user's input is out of array bounds or overlaps with another ship on the board with a leftward orientation
-		if (IsOutOfBounds(row, column, shipLength, LEFT) == true || IsUserShipOverlap(row, column, shipLength, LEFT) == true)
+		//If the user's input is out of array bounds or overlaps with another ship on the board with a leftward compas
+		if (ship_outofbounds_check(row, column, shipLength, East) == true || player_overlap_check(row, column, shipLength, East) == true)
 		{
 			//Print error message and board 
-			OutOfBoundsMessage();
-			PrintBoard(user.shipArray);
+			cout << endl << "\nYour Ship is outside the game board or overlapping with another ship and must be moved\a\n";
+			cout << "Re-enter a new set of coordinates to try again.\n" << endl;
+			output_board(user.shipArray);
 
 			return false;
 		}
 
 		return true;
 
-	case 'R':
+	case 'West':
 
-		//If The user's input is out of array bounds or overlaps with another ship on the board with a rightward orientation
-		if (IsOutOfBounds(row, column, shipLength, RIGHT) == true || IsUserShipOverlap(row, column, shipLength, RIGHT) == true)
+		//If The user's input is out of array bounds or overlaps with another ship on the board with a rightward compas
+		if (ship_outofbounds_check(row, column, shipLength, West) == true || player_overlap_check(row, column, shipLength, West) == true)
 		{
 			//Print error message and board 
-			OutOfBoundsMessage();
-			PrintBoard(user.shipArray);
+			cout << endl << "\nYour Ship is outside the game board or overlapping with another ship and must be moved\a\n";
+			cout << "Re-enter a new set of coordinates to try again.\n" << endl;
+			output_board(user.shipArray);
 
 			return false;
 		}
@@ -879,14 +942,14 @@ bool IsValidOrientation(int row, int column, string shipOrientation, int shipLen
 	}
 }
 
-bool IsUserShipOverlap(int row, int column, int shipLength, orientation shipDirection)
+bool player_overlap_check(int row, int column, int shipLength, compas shipDirection)
 {
 	//Limit is used to control the following for loops
 	int limit;
 	switch (shipDirection)
 	{
 
-	case UP:
+	case North:
 		limit = row - shipLength;
 
 		for (row; row > limit; --row)
@@ -897,7 +960,7 @@ bool IsUserShipOverlap(int row, int column, int shipLength, orientation shipDire
 
 		return false;
 
-	case DOWN:
+	case South:
 		limit = row + shipLength;
 
 		for (row; row <= limit; ++row)
@@ -908,7 +971,7 @@ bool IsUserShipOverlap(int row, int column, int shipLength, orientation shipDire
 
 		return false;
 
-	case LEFT:
+	case East:
 		limit = column - shipLength;
 
 		for (column; column > limit; column--)
@@ -919,7 +982,7 @@ bool IsUserShipOverlap(int row, int column, int shipLength, orientation shipDire
 
 		return false;
 
-	case RIGHT:
+	case West:
 		limit = column + shipLength;
 
 		for (column; column < limit; column++)
@@ -932,29 +995,29 @@ bool IsUserShipOverlap(int row, int column, int shipLength, orientation shipDire
 	}
 }
 
-bool IsOutOfBounds(int row, int column, int shipLength, orientation shipDirection)
+bool ship_outofbounds_check(int row, int column, int shipLength, compas shipDirection)
 {
 	switch (shipDirection)
 	{
-	case UP:
+	case North:
 		if (row - shipLength < -1)
 			return true;
 
 		return false;
 
-	case DOWN:
+	case South:
 		if (row + shipLength > 10)
 			return true;
 
 		return false;
 
-	case LEFT:
+	case East:
 		if (column - shipLength < -1)
 			return true;
 
 		return false;
 
-	case RIGHT:
+	case West:
 		if (column + shipLength > 10)
 			return true;
 
@@ -962,13 +1025,13 @@ bool IsOutOfBounds(int row, int column, int shipLength, orientation shipDirectio
 	}
 }
 
-void PlaceUserShip(int row, int column, int shipLength, string shipOrientation)
+void place_player_ship(int row, int column, int shipLength, string ship_direction)
 {
 	int limit;
 
-	switch (toupper(shipOrientation[0]))
+	switch (toupper(ship_direction[0]))
 	{
-	case 'U':
+	case 'N':
 		limit = row - shipLength;
 
 		for (row; row > limit; --row)
@@ -977,7 +1040,7 @@ void PlaceUserShip(int row, int column, int shipLength, string shipOrientation)
 		}
 		break;
 
-	case 'D':
+	case 'S':
 		limit = row + shipLength;
 
 		for (row; row < limit; row++)
@@ -986,7 +1049,7 @@ void PlaceUserShip(int row, int column, int shipLength, string shipOrientation)
 		}
 		break;
 
-	case 'L':
+	case 'E':
 		limit = column - shipLength;
 
 		for (column; column > limit; --column)
@@ -995,7 +1058,7 @@ void PlaceUserShip(int row, int column, int shipLength, string shipOrientation)
 		}
 		break;
 
-	case 'R':
+	case 'W':
 		limit = column + shipLength;
 
 		for (column; column < limit; ++column)
@@ -1005,35 +1068,4 @@ void PlaceUserShip(int row, int column, int shipLength, string shipOrientation)
 		break;
 	}
 
-}
-
-void OutOfBoundsMessage()
-{
-	cout << "\n\n********************************************************************************************************";
-	cout << "\nThe coordinates you entered along with the ship orientation are outside of the bounds of the game board.\a\n";
-	cout << "Re-enter your ship coordinates with this in mind.\n";
-	cout << "********************************************************************************************************\n";
-}
-
-void InvalidInputMessage()
-{
-	cout << "\n************************************************************************\n";
-	cout << "Invalid data - your input should be an integer between 1 and 10 inclusive\a\n";
-	cout << "************************************************************************\n";
-	cout << "Try again: ";
-}
-
-void OverlapMessage()
-{
-	cout << "\n\n*********************************************************************************************************";
-	cout << "\nThe coordinates you entered along with the ship orientation have over lap with another one of your ships.\a\n";
-	cout << "Re-enter your ship coordinates with this in mind.\n";
-	cout << "*********************************************************************************************************\n";
-}
-
-void UpdatedBoardMessage()
-{
-	cout << "\n***********************\n";
-	cout << "This is now your board: \n";
-	cout << "***********************\n";
 }
