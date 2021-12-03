@@ -16,25 +16,42 @@ public:
 	//Class constructor
 	Player();
 
-	void SetNumOfHits(int hits);
-	//Pre:The game has terminated and the number of hits has been passed as an argument
-	//Post The total number of hits during program execution is updated
+	/*Precondition:
+		The game has been terminated
+		The number of hits have been passed
+	Postcondition:
+		The total number of hits has been updated
+	*/
+	void set_hit_number(int hits);
 
-	void SetNumOfMisses(int misses);
-	//Pre: The game has terminated and the number of misses has been passed as an argument
-	//Post: The total number of misses during program execution is updated
+	/*Precondition:
+		The game has been terminated
+		The number of misses have been passed
+	Postcondition:
+		The total number of misses has been updated
+	*/
+	void set_miss_number(int misses);
 
-	float GetHits();
-	//Pre: None - initialized to zero
-	//Post: The number hits on enemy ships is printed to the console
+	/*Precondition:
+		None nessesary
+	Postcondition:
+		The number of hits by the player is printed
+	*/
+	float computer_damage_taken();
 
-	float GetMisses();
-	//Pre: None - initialized to zero
-	//Post: The number of missed shots is printed to the console
+	/*Precondition:
+		None nessesary
+	Postcondition:
+		The number of missed shots is printed
+	*/
+	float missed_shots();
 
-	float PrintAccuracy();
-	//Pre: None - both cumulative hits and misses are initialized to zero.
-	//Post: Prints the ratio of his to shots taken for both the user and the computer.
+	/*Precondition:
+		None nessesary
+	Postcondition:
+		The ratio of hits to misses is printed
+	*/
+	float output_accuracy();
 
 };
 

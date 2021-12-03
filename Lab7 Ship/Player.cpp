@@ -7,22 +7,22 @@ Player::Player() {
 	cumulativeMisses = 0;
 }
 
-void Player::SetNumOfHits(int hits) {
+void Player::set_hit_number(int hits) {
 	cumulativeHits += hits;
 }
 
-void Player::SetNumOfMisses(int misses) {
+void Player::set_miss_number(int misses) {
 	cumulativeMisses += misses;
 }
 
-float Player::GetHits() {
+float Player::computer_damage_taken() {
 	return cumulativeHits;
 }
 
-float Player::GetMisses() {
+float Player::missed_shots() {
 	return cumulativeMisses;
 }
 
-float Player::PrintAccuracy() {
+float Player::output_accuracy() {
 	return cumulativeHits / (cumulativeHits + cumulativeMisses);
 }
